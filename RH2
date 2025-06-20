@@ -1,0 +1,143 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# --- PRÉPARATION : Recharger et nettoyer le DataFrame si la session a été redémarrée ---
+# Si tu as redémarré ton kernel/notebook depuis la dernière fois, il faut re-exécuter ces étapes.
+# Si tu as juste continué la session sans redémarrer, ton 'df' est déjà dans le bon état.
+# Dans le doute, mieux vaut re-exécuter cette partie.
+
+file_path = 'HRDataset_v14.csv' # Assure-toi que le chemin d'accès est correct
+df = pd.read_csv(file_path)
+
+# Gérer DatesofTermination
+df['DateofTermination'] = pd.to_datetime(df['DateofTermination'], errors='coerce')
+df['IsActive'] = df['DateofTermination'].isna()
+
+# Gérer ManagerID
+mode_manager_id = df['ManagerID'].mode()[0]
+df['ManagerID'] = df['ManagerID'].fillna(mode_manager_id)
+df['ManagerID'] = df['ManagerID'].astype(int)
+
+# Définir l'ordre des catégories de performance ET convertir la colonne
+# C'est cette ligne qui manquait si tu avais redémarré!
+performance_order = ['PIP', 'Needs Improvement', 'Fully Meets', 'Exceeds']
+df['PerformanceScore'] = pd.Categorical(df['PerformanceScore'], categories=performance_order, ordered=True)
+
+print("DataFrame prêt pour l'analyse des relations.")
+# --- FIN DE LA PRÉPARATION ---
+
+
+# --- DÉBUT DE L'ANALYSE DES RELATIONS ET FACTEURS D'AMÉLIORATION ---
+
+# --- 1. Analyse de PerformanceScore avec les variables catégorielles ---
+
+# --- Analyse de PerformanceScore par Department ---
+print("\n--- PerformanceScore par Département ---")
+print(pd.crosstab(df['Department'], df['PerformanceScore'], normalize='index') * 100)
+
+plt.figure(figsize=(12, 7))
+sns.countplot(data=df, y='Department', hue='PerformanceScore',
+              order=df['Department'].value_counts().index,
+              hue_order=performance_order,
+              palette='viridis')
+plt.title('Distribution du Score de Performance par Département')
+plt.xlabel('Nombre d\'employés')
+plt.ylabel('Département')
+plt.grid(axis='x', alpha=0.75)
+plt.show()
+
+# --- Analyse de PerformanceScore par Position ---
+print("\n--- PerformanceScore par Position ---")
+print(pd.crosstab(df['Position'], df['PerformanceScore'], normalize='index') * 100)
+
+plt.figure(figsize=(14, 8)) # Taille un peu plus grande pour Position
+sns.countplot(data=df, y='Position', hue='PerformanceScore',
+              order=df['Position'].value_counts().index,
+              hue_order=performance_order,
+              palette='viridis')
+plt.title('Distribution du Score de Performance par Position')
+plt.xlabel('Nombre d\'employés')
+plt.ylabel('Position')
+plt.grid(axis='x', alpha=0.75)
+plt.show()
+
+# --- Analyse de PerformanceScore par EmploymentStatus ---
+print("\n--- PerformanceScore par Statut d'Emploi ---")
+print(pd.crosstab(df['EmploymentStatus'], df['PerformanceScore'], normalize='index') * 100)
+
+plt.figure(figsize=(12, 7))
+sns.countplot(data=df, y='EmploymentStatus', hue='PerformanceScore',
+              order=df['EmploymentStatus'].value_counts().index,
+              hue_order=performance_order,
+              palette='viridis')
+plt.title('Distribution du Score de Performance par Statut d\'Emploi')
+plt.xlabel('Nombre d\'employés')
+plt.ylabel('Statut d\'Emploi')
+plt.grid(axis='x', alpha=0.75)
+plt.show()
+
+# --- 2. Analyse de PerformanceScore avec les variables numériques ---
+
+# --- Analyse de PerformanceScore par Salary ---
+print("\n--- PerformanceScore par Salaire ---")
+print(df.groupby('PerformanceScore')['Salary'].agg(['mean', 'median']))
+
+plt.figure(figsize=(10, 7))
+# Ancienne version (génère le warning)
+sns.boxplot(data=df, x='PerformanceScore', y='Salary', order=performance_order, palette='viridis')
+
+# Nouvelle version (sans warning)
+sns.boxplot(data=df, x='PerformanceScore', y='Salary', hue='PerformanceScore', 
+           order=performance_order, palette='viridis', legend=False)
+plt.title('Distribution du Salaire par Niveau de Performance')
+plt.xlabel('Niveau de Performance')
+plt.ylabel('Salaire')
+plt.grid(axis='y', alpha=0.75)
+plt.show()
+
+# --- Analyse de PerformanceScore par EngagementSurvey ---
+print("\n--- PerformanceScore par Score d'Engagement ---")
+print(df.groupby('PerformanceScore')['EngagementSurvey'].agg(['mean', 'median']))
+
+plt.figure(figsize=(10, 7))
+sns.boxplot(data=df, x='PerformanceScore', y='EngagementSurvey', hue='PerformanceScore', order=performance_order, palette='viridis', legend=False)
+plt.title('Distribution du Score d\'Engagement par Niveau de Performance')
+plt.xlabel('Niveau de Performance')
+plt.ylabel('Score d\'Engagement')
+plt.grid(axis='y', alpha=0.75)
+plt.show()
+
+# --- Analyse de PerformanceScore par SpecialProjectsCount ---
+print("\n--- PerformanceScore par Nombre de Projets Spéciaux ---")
+print(df.groupby('PerformanceScore')['SpecialProjectsCount'].agg(['mean', 'median']))
+
+plt.figure(figsize=(10, 7))
+sns.boxplot(data=df, x='PerformanceScore', y='SpecialProjectsCount', hue='PerformanceScore', order=performance_order, palette='viridis', legend=False)
+
+plt.title('Distribution du Nombre de Projets Spéciaux par Niveau de Performance')
+plt.xlabel('Niveau de Performance')
+plt.ylabel('Nombre de Projets Spéciaux')
+plt.grid(axis='y', alpha=0.75)
+plt.show()
+
+# Analyse des relations avec Absences et DaysLateLast30 (que nous avons déjà vues mais importantes pour le lien avec la perf)
+print("\n--- PerformanceScore par Absences ---")
+print(df.groupby('PerformanceScore')['Absences'].agg(['mean', 'median']))
+plt.figure(figsize=(10, 7))
+sns.boxplot(data=df, x='PerformanceScore', y='Absences',hue='PerformanceScore', order=performance_order, palette='viridis', legend=False)
+plt.title('Distribution des Absences par Niveau de Performance')
+plt.xlabel('Niveau de Performance')
+plt.ylabel('Nombre d\'Absences')
+plt.grid(axis='y', alpha=0.75)
+plt.show()
+
+print("\n--- PerformanceScore par Jours de Retard ---")
+print(df.groupby('PerformanceScore')['DaysLateLast30'].agg(['mean', 'median']))
+plt.figure(figsize=(10, 7))
+sns.boxplot(data=df, x='PerformanceScore', y='DaysLateLast30', order=performance_order, palette='viridis')
+plt.title('Distribution des Jours de Retard par Niveau de Performance')
+plt.xlabel('Niveau de Performance')
+plt.ylabel('Nombre de Jours de Retard')
+plt.grid(axis='y', alpha=0.75)
+plt.show()

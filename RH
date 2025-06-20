@@ -1,0 +1,131 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Chemin vers ton fichier dataset (assure-toi que le fichier est au bon endroit)
+file_path = 'HRDataset_v14.csv'
+
+# Charger le dataset dans un DataFrame Pandas
+df = pd.read_csv(file_path)
+
+# Afficher les 5 premières lignes du DataFrame
+print("Aperçu des 5 premières lignes du dataset :")
+print(df.head())
+
+# Afficher les informations générales sur le DataFrame (nombre de lignes, colonnes, types de données)
+print("\nInformations générales sur le dataset :")
+print(df.info())
+
+# Afficher les statistiques descriptives pour les colonnes numériques
+print("\nStatistiques descriptives pour les colonnes numériques :")
+print(df.describe())
+
+# Convertir DatesofTermination en type datetime
+# Les valeurs non convertibles (y compris les "non-null" mais vides/mal formées ou simplement NaN) deviendront NaT
+df['DateofTermination'] = pd.to_datetime(df['DateofTermination'], errors='coerce')
+
+# Créer une nouvelle colonne 'IsActive'
+# True si DateofTermination est NaT (donc l'employé est toujours là), False sinon
+df['IsActive'] = df['DateofTermination'].isna()
+
+print(f"Nouveau type de 'DateofTermination' : {df['DateofTermination'].dtype}")
+print(f"Nombre de NaT dans 'DateofTermination' (employés actifs) : {df['DateofTermination'].isna().sum()}")
+print(f"Aperçu des valeurs de 'IsActive' : \n{df['IsActive'].value_counts()}")
+
+# Calculer le mode de la colonne ManagerID
+# [0] pour prendre le premier mode au cas où il y en aurait plusieurs
+mode_manager_id = df['ManagerID'].mode()[0]
+print(f"Le mode de ManagerID est : {mode_manager_id}")
+
+# Remplacer les valeurs manquantes dans ManagerID par le mode
+df['ManagerID'] = df['ManagerID'].fillna(mode_manager_id)
+
+df['ManagerID'] = df['ManagerID'].astype(int)
+
+print("Dataset rechargé et nettoyage initial appliqué.")
+print(df.info()) # Pour re-confirmer l'état du DataFrame
+
+# --- NOUVELLE ANALYSE DE 'PerformanceScore' (en tant que variable Catégorielle) ---
+print("\n--- ANALYSE CORRIGÉE DE 'PerformanceScore' ---")
+
+# Définir l'ordre des catégories de performance
+performance_order = ['PIP', 'Needs Improvement', 'Fully Meets', 'Exceeds']
+
+# Convertir la colonne 'PerformanceScore' en type catégoriel avec un ordre
+df['PerformanceScore'] = pd.Categorical(df['PerformanceScore'], categories=performance_order, ordered=True)
+
+print(f"Nouveau type de 'PerformanceScore' : {df['PerformanceScore'].dtype}")
+
+# Statistiques descriptives pour une variable catégorielle ordinale
+print("\nFréquence des catégories de PerformanceScore :")
+print(df['PerformanceScore'].value_counts())
+
+print("\nFréquence des catégories de PerformanceScore (en pourcentage) :")
+print(df['PerformanceScore'].value_counts(normalize=True) * 100)
+
+print(f"Mode de PerformanceScore : {df['PerformanceScore'].mode()[0]}")
+
+# Visualisation : Diagramme en barres
+plt.figure(figsize=(10, 6))
+sns.countplot(data=df, x='PerformanceScore', order=performance_order, palette='viridis')
+plt.title('Distribution des Scores de Performance')
+plt.xlabel('Niveau de Performance')
+plt.ylabel('Nombre d\'employés')
+plt.grid(axis='y', alpha=0.75)
+plt.show()
+
+# Visualisation : Diagramme circulaire (Pie Chart) - utile pour les proportions
+plt.figure(figsize=(8, 8))
+df['PerformanceScore'].value_counts(normalize=True).plot.pie(autopct='%1.1f%%', startangle=90, cmap='viridis')
+plt.title('Proportion des Niveaux de Performance')
+plt.ylabel('') # Supprime l'étiquette 'PerformanceScore' de l'axe y pour le pie chart
+plt.show()
+
+# --- RE-ANALYSE DES AUTRES COLONNES (Absences et DaysLateLast30) ---
+# Le code ci-dessous reste le même car ces colonnes étaient déjà numériques et propres.
+
+# --- Analyse de 'Absences' ---
+print("\n--- Analyse de la colonne 'Absences' ---")
+print("\nStatistiques descriptives d'Absences :")
+print(df['Absences'].describe())
+print(f"Mode d'Absences : {df['Absences'].mode()[0]}")
+print(f"Variance d'Absences : {df['Absences'].var()}")
+
+plt.figure(figsize=(10, 6))
+sns.histplot(df['Absences'], kde=True, bins=15)
+plt.title('Distribution des Absences')
+plt.xlabel('Nombre d\'Absences')
+plt.ylabel('Fréquence')
+plt.grid(axis='y', alpha=0.75)
+plt.show()
+
+plt.figure(figsize=(8, 6))
+sns.boxplot(y=df['Absences'])
+plt.title('Boxplot des Absences')
+plt.ylabel('Nombre d\'Absences')
+plt.grid(axis='y', alpha=0.75)
+plt.show()
+
+
+# --- Analyse de 'DaysLateLast30' ---
+print("\n--- Analyse de la colonne 'DaysLateLast30' ---")
+print("\nStatistiques descriptives de DaysLateLast30 :")
+print(df['DaysLateLast30'].describe())
+print(f"Mode de DaysLateLast30 : {df['DaysLateLast30'].mode()[0]}")
+print(f"Variance de DaysLateLast30 : {df['DaysLateLast30'].var()}")
+
+plt.figure(figsize=(10, 6))
+sns.histplot(df['DaysLateLast30'], kde=True, bins=range(0, int(df['DaysLateLast30'].max()) + 2))
+plt.title('Distribution des Jours de Retard sur 30 Jours')
+plt.xlabel('Nombre de Jours de Retard')
+plt.ylabel('Fréquence')
+plt.grid(axis='y', alpha=0.75)
+plt.xticks(range(0, int(df['DaysLateLast30'].max()) + 1))
+plt.show()
+
+plt.figure(figsize=(8, 6))
+sns.boxplot(y=df['DaysLateLast30'])
+plt.title('Boxplot des Jours de Retard sur 30 Jours')
+plt.ylabel('Nombre de Jours de Retard')
+plt.grid(axis='y', alpha=0.75)
+plt.show()

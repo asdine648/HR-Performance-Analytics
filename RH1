@@ -1,0 +1,54 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Chemin vers ton fichier dataset (assure-toi que le fichier est au bon endroit)
+file_path = 'HRDataset_v14.csv'
+
+# Charger le dataset dans un DataFrame Pandas
+df = pd.read_csv(file_path)
+
+# --- Détection des Outliers pour 'Absences' ---
+print("\n--- Détection des Outliers pour 'Absences' ---")
+
+Q1_absences = df['Absences'].quantile(0.25)
+Q3_absences = df['Absences'].quantile(0.75)
+IQR_absences = Q3_absences - Q1_absences
+
+lower_bound_absences = Q1_absences - 1.5 * IQR_absences
+upper_bound_absences = Q3_absences + 1.5 * IQR_absences
+
+print(f"Q1 (Absences) : {Q1_absences}")
+print(f"Q3 (Absences) : {Q3_absences}")
+print(f"IQR (Absences) : {IQR_absences}")
+print(f"Limite inférieure (Absences) : {lower_bound_absences}")
+print(f"Limite supérieure (Absences) : {upper_bound_absences}")
+
+outliers_absences = df[(df['Absences'] < lower_bound_absences) | (df['Absences'] > upper_bound_absences)]
+print(f"Nombre d'outliers pour Absences : {len(outliers_absences)}")
+if not outliers_absences.empty:
+    print("Aperçu des outliers pour Absences :")
+    print(outliers_absences[['EmpID', 'Absences', 'PerformanceScore']].head()) # Afficher quelques colonnes pertinentes
+
+
+# --- Détection des Outliers pour 'DaysLateLast30' ---
+print("\n--- Détection des Outliers pour 'DaysLateLast30' ---")
+
+Q1_days_late = df['DaysLateLast30'].quantile(0.25)
+Q3_days_late = df['DaysLateLast30'].quantile(0.75)
+IQR_days_late = Q3_days_late - Q1_days_late
+
+lower_bound_days_late = Q1_days_late - 1.5 * IQR_days_late
+upper_bound_days_late = Q3_days_late + 1.5 * IQR_days_late
+
+print(f"Q1 (DaysLateLast30) : {Q1_days_late}")
+print(f"Q3 (DaysLateLast30) : {Q3_days_late}")
+print(f"IQR (DaysLateLast30) : {IQR_days_late}")
+print(f"Limite inférieure (DaysLateLast30) : {lower_bound_days_late}")
+print(f"Limite supérieure (DaysLateLast30) : {upper_bound_days_late}")
+
+outliers_days_late = df[(df['DaysLateLast30'] < lower_bound_days_late) | (df['DaysLateLast30'] > upper_bound_days_late)]
+print(f"Nombre d'outliers pour DaysLateLast30 : {len(outliers_days_late)}")
+if not outliers_days_late.empty:
+    print("Aperçu des outliers pour DaysLateLast30 :")
+    print(outliers_days_late[['EmpID', 'DaysLateLast30', 'PerformanceScore']].head())

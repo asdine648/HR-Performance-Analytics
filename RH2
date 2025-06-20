@@ -3,9 +3,6 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # --- PRÉPARATION : Recharger et nettoyer le DataFrame si la session a été redémarrée ---
-# Si tu as redémarré ton kernel/notebook depuis la dernière fois, il faut re-exécuter ces étapes.
-# Si tu as juste continué la session sans redémarrer, ton 'df' est déjà dans le bon état.
-# Dans le doute, mieux vaut re-exécuter cette partie.
 
 file_path = 'HRDataset_v14.csv' # Assure-toi que le chemin d'accès est correct
 df = pd.read_csv(file_path)
@@ -20,7 +17,6 @@ df['ManagerID'] = df['ManagerID'].fillna(mode_manager_id)
 df['ManagerID'] = df['ManagerID'].astype(int)
 
 # Définir l'ordre des catégories de performance ET convertir la colonne
-# C'est cette ligne qui manquait si tu avais redémarré!
 performance_order = ['PIP', 'Needs Improvement', 'Fully Meets', 'Exceeds']
 df['PerformanceScore'] = pd.Categorical(df['PerformanceScore'], categories=performance_order, ordered=True)
 
@@ -84,8 +80,6 @@ print("\n--- PerformanceScore par Salaire ---")
 print(df.groupby('PerformanceScore')['Salary'].agg(['mean', 'median']))
 
 plt.figure(figsize=(10, 7))
-# Ancienne version (génère le warning)
-sns.boxplot(data=df, x='PerformanceScore', y='Salary', order=performance_order, palette='viridis')
 
 # Nouvelle version (sans warning)
 sns.boxplot(data=df, x='PerformanceScore', y='Salary', hue='PerformanceScore', 

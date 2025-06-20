@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-# Chemin vers ton fichier dataset (assure-toi que le fichier est au bon endroit)
+# Chemin vers le fichier dataset (assure-toi que le fichier est au bon endroit)
 file_path = 'HRDataset_v14.csv'
 
 # Charger le dataset dans un DataFrame Pandas
